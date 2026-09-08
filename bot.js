@@ -5,7 +5,7 @@ const STATE_FILE = "state.json";
 
 const USERNAME = "shinobi602";
 
-// Accetta solamente post degli ultimi 30 minuti.
+// Accetta solamente post degli ultimi 60 minuti.
 // Lo state impedisce comunque i duplicati.
 const MAX_AGE_MS = 60 * 60 * 1000;
 
@@ -33,7 +33,7 @@ function loadState() {
 
 function saveState(ids) {
   try {
-    const uniqueIds = [...new Set(ids)].slice(-200);
+     uniqueIds = [...new Set(ids)].slice(-200);
 
     fs.writeFileSync(
       STATE_FILE,
@@ -92,12 +92,12 @@ function getFxTwitterUrl(postUrl) {
 
 async function getPosts() {
   try {
-    const url =
+     url =
       `https://api.vxtwitter.com/${USERNAME}?with_tweets=true`;
 
     console.log(`Connessione a: ${url}`);
 
-    const response = await fetch(url, {
+     response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
       }
@@ -115,7 +115,7 @@ async function getPosts() {
       return [];
     }
 
-    const data = await response.json();
+     data = await response.json();
 
     if (!Array.isArray(data.latest_tweets)) {
       console.error(
@@ -129,15 +129,15 @@ async function getPosts() {
       `VXTwitter ha restituito ${data.latest_tweets.length} tweet`
     );
 
-    const now = Date.now();
+     now = Date.now();
 
     // ========================================================
     // CONVERSIONE TWEET
     // ========================================================
 
-    const posts = data.latest_tweets
+     posts = data.latest_tweets
       .map((tweet) => {
-        const tweetId =
+         tweetId =
           tweet.tweetID ||
           tweet.id;
 
@@ -145,7 +145,7 @@ async function getPosts() {
           return null;
         }
 
-        const createdAt =
+         createdAt =
           tweet.date ||
           null;
 
@@ -156,7 +156,7 @@ async function getPosts() {
         let media = null;
         let mediaType = null;
 
-        const extended =
+         extended =
           Array.isArray(tweet.media_extended)
             ? tweet.media_extended
             : [];
@@ -165,7 +165,7 @@ async function getPosts() {
         // VIDEO
         // ----------------------------------------------------
 
-        const videoMedia = extended.find(
+         videoMedia = extended.find(
           (item) =>
             item &&
             item.type === "video"
@@ -184,7 +184,7 @@ async function getPosts() {
         // ----------------------------------------------------
 
         if (!mediaType) {
-          const imageMedia = extended.find(
+           imageMedia = extended.find(
             (item) =>
               item &&
               item.type === "image"
@@ -209,12 +209,12 @@ async function getPosts() {
           Array.isArray(tweet.mediaURLs) &&
           tweet.mediaURLs.length > 0
         ) {
-          const firstMedia =
+           firstMedia =
             tweet.mediaURLs[0];
 
           media = firstMedia;
 
-          const mediaUrl =
+           mediaUrl =
             String(firstMedia).toLowerCase();
 
           if (
@@ -245,7 +245,7 @@ async function getPosts() {
           author: {
             name:
               tweet.user_name ||
-              "Anime News And Facts",
+              "Lord Putin",
 
             screen_name:
               tweet.user_screen_name ||
@@ -266,7 +266,7 @@ async function getPosts() {
     // FILTRO TEMPORALE
     // ========================================================
 
-    const recentPosts =
+     recentPosts =
       posts.filter((post) => {
         if (!post.created_at) {
           console.log(
@@ -276,7 +276,7 @@ async function getPosts() {
           return false;
         }
 
-        const tweetTime =
+         tweetTime =
           new Date(post.created_at).getTime();
 
         if (!Number.isFinite(tweetTime)) {
@@ -287,10 +287,10 @@ async function getPosts() {
           return false;
         }
 
-        const age =
+         age =
           now - tweetTime;
 
-        const ageMinutes =
+         ageMinutes =
           Math.round(age / 60000);
 
         console.log(
@@ -333,13 +333,13 @@ async function getPosts() {
 // ============================================================
 
 async function sendToDiscord(post) {
-  const author =
+   author =
     post.author ||
     {};
 
   const authorName =
     author.name ||
-    "Anime News And Facts";
+    "Lord Putin";
 
   const username =
     author.screen_name ||
@@ -450,7 +450,7 @@ async function sendToDiscord(post) {
 
   const embed = {
     title:
-      "📰 ANIME NEWS",
+      "🎮 GAME NEWS",
 
     url:
       post.url,
@@ -475,8 +475,7 @@ async function sendToDiscord(post) {
     },
 
     footer: {
-      text:
-        "Anime News & Facts • X"
+      text: "Game News • X"
     },
 
     timestamp:
@@ -499,7 +498,7 @@ async function sendToDiscord(post) {
 
   const payload = {
     username:
-      "Anime News & Facts",
+      "Lord Putin",
 
     ...(avatar
       ? {
