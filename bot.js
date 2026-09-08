@@ -245,12 +245,12 @@ async function getPosts() {
           author: {
             name:
               tweet.user_name ||
-              "Lord Putin",
-
+              USERNAME,
+          
             screen_name:
               tweet.user_screen_name ||
               USERNAME,
-
+          
             avatar_url:
               tweet.user_profile_image_url ||
               null
