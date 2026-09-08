@@ -537,6 +537,8 @@ async function sendToDiscord(post) {
   const payload = {
     username:
       "Lord Putin",
+    content:
+    `<${post.url}>`,
 
     embeds: [
       embed
