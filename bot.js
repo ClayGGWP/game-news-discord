@@ -454,6 +454,23 @@ async function sendToDiscord(post) {
       new Date().toISOString();
   }
 
+  const stats = post.stats || {};
+
+  const statsParts = [
+    `💬 ${stats.replies ?? 0}`,
+    `🔁 ${stats.retweets ?? 0}`,
+    `❤️ ${stats.likes ?? 0}`
+  ];
+  
+  if (
+    stats.views !== null &&
+    stats.views !== undefined
+  ) {
+    statsParts.push(`👁️ ${stats.views}`);
+  }
+  
+  const statsText = statsParts.join("   ");
+  
   const embed = {
     title:
       "🎮 GAME NEWS",
@@ -462,6 +479,12 @@ async function sendToDiscord(post) {
       post.url,
 
     description,
+    fields: [
+      {
+        name: "\u200b",
+        value: statsText
+      }
+    ],
 
     color:
       0x5865f2,
