@@ -257,7 +257,24 @@ async function getPosts() {
           },
 
           media,
-          mediaType
+          mediaType,
+
+          stats: {
+            replies:
+              tweet.replies ?? 0,
+          
+            retweets:
+              tweet.retweets ?? 0,
+          
+            likes:
+              tweet.likes ?? 0,
+          
+            views:
+              tweet.views ??
+              tweet.view_count ??
+              tweet.viewCount ??
+              null
+        }
         };
       })
       .filter(Boolean);
