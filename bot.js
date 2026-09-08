@@ -7,7 +7,7 @@ const USERNAME = "shinobi602";
 
 // Accetta solamente post degli ultimi 60 minuti.
 // Lo state impedisce comunque i duplicati.
-const MAX_AGE_MS = 300 * 60 * 1000;
+const MAX_AGE_MS = 600 * 60 * 1000;
 
 // ============================================================
 // STATE
@@ -356,6 +356,8 @@ async function sendToDiscord(post) {
   // Usa FxTwitter così Discord genera
   // automaticamente il player video.
   //
+  // L'avatar del bot Discord NON viene sovrascritto.
+  //
   // ==========================================================
 
   if (post.mediaType === "video") {
@@ -375,12 +377,6 @@ async function sendToDiscord(post) {
     const payload = {
       username:
         "Lord Putin",
-
-      ...(avatar
-        ? {
-            avatar_url: avatar
-          }
-        : {}),
 
       content:
         fxUrl
@@ -490,15 +486,19 @@ async function sendToDiscord(post) {
     };
   }
 
+  // ==========================================================
+  // PAYLOAD
+  // ==========================================================
+  //
+  // NON mettiamo avatar_url.
+  // Discord usa automaticamente la foto configurata
+  // direttamente nel webhook.
+  //
+  // ==========================================================
+
   const payload = {
     username:
       "Lord Putin",
-
-    ...(avatar
-      ? {
-          avatar_url: avatar
-        }
-      : {}),
 
     embeds: [
       embed
