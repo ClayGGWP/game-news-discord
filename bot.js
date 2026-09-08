@@ -7,7 +7,7 @@ const USERNAME = "shinobi602";
 
 // Accetta solamente post degli ultimi 60 minuti.
 // Lo state impedisce comunque i duplicati.
-const MAX_AGE_MS = 600 * 60 * 1000;
+const MAX_AGE_MS = 60 * 60 * 1000;
 
 // ============================================================
 // STATE
