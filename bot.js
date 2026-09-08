@@ -7,7 +7,7 @@ const USERNAME = "shinobi602";
 
 // Accetta solamente post degli ultimi 60 minuti.
 // Lo state impedisce comunque i duplicati.
-const MAX_AGE_MS = 60 * 60 * 1000;
+const MAX_AGE_MS = 300 * 60 * 1000;
 
 // ============================================================
 // STATE
@@ -33,7 +33,7 @@ function loadState() {
 
 function saveState(ids) {
   try {
-     uniqueIds = [...new Set(ids)].slice(-200);
+    const uniqueIds = [...new Set(ids)].slice(-200);
 
     fs.writeFileSync(
       STATE_FILE,
@@ -92,12 +92,12 @@ function getFxTwitterUrl(postUrl) {
 
 async function getPosts() {
   try {
-     url =
+    const url =
       `https://api.vxtwitter.com/${USERNAME}?with_tweets=true`;
 
     console.log(`Connessione a: ${url}`);
 
-     response = await fetch(url, {
+    const response = await fetch(url, {
       headers: {
         "User-Agent": "Mozilla/5.0"
       }
@@ -115,7 +115,7 @@ async function getPosts() {
       return [];
     }
 
-     data = await response.json();
+    const data = await response.json();
 
     if (!Array.isArray(data.latest_tweets)) {
       console.error(
@@ -129,15 +129,15 @@ async function getPosts() {
       `VXTwitter ha restituito ${data.latest_tweets.length} tweet`
     );
 
-     now = Date.now();
+    const now = Date.now();
 
     // ========================================================
     // CONVERSIONE TWEET
     // ========================================================
 
-     posts = data.latest_tweets
+    const posts = data.latest_tweets
       .map((tweet) => {
-         tweetId =
+        const tweetId =
           tweet.tweetID ||
           tweet.id;
 
@@ -145,7 +145,7 @@ async function getPosts() {
           return null;
         }
 
-         createdAt =
+        const createdAt =
           tweet.date ||
           null;
 
@@ -156,7 +156,7 @@ async function getPosts() {
         let media = null;
         let mediaType = null;
 
-         extended =
+        const extended =
           Array.isArray(tweet.media_extended)
             ? tweet.media_extended
             : [];
@@ -165,7 +165,7 @@ async function getPosts() {
         // VIDEO
         // ----------------------------------------------------
 
-         videoMedia = extended.find(
+        const videoMedia = extended.find(
           (item) =>
             item &&
             item.type === "video"
@@ -184,7 +184,7 @@ async function getPosts() {
         // ----------------------------------------------------
 
         if (!mediaType) {
-           imageMedia = extended.find(
+          const imageMedia = extended.find(
             (item) =>
               item &&
               item.type === "image"
@@ -209,12 +209,12 @@ async function getPosts() {
           Array.isArray(tweet.mediaURLs) &&
           tweet.mediaURLs.length > 0
         ) {
-           firstMedia =
+          const firstMedia =
             tweet.mediaURLs[0];
 
           media = firstMedia;
 
-           mediaUrl =
+          const mediaUrl =
             String(firstMedia).toLowerCase();
 
           if (
@@ -246,11 +246,11 @@ async function getPosts() {
             name:
               tweet.user_name ||
               USERNAME,
-          
+
             screen_name:
               tweet.user_screen_name ||
               USERNAME,
-          
+
             avatar_url:
               tweet.user_profile_image_url ||
               null
@@ -266,7 +266,7 @@ async function getPosts() {
     // FILTRO TEMPORALE
     // ========================================================
 
-     recentPosts =
+    const recentPosts =
       posts.filter((post) => {
         if (!post.created_at) {
           console.log(
@@ -276,7 +276,7 @@ async function getPosts() {
           return false;
         }
 
-         tweetTime =
+        const tweetTime =
           new Date(post.created_at).getTime();
 
         if (!Number.isFinite(tweetTime)) {
@@ -287,10 +287,10 @@ async function getPosts() {
           return false;
         }
 
-         age =
+        const age =
           now - tweetTime;
 
-         ageMinutes =
+        const ageMinutes =
           Math.round(age / 60000);
 
         console.log(
@@ -299,12 +299,12 @@ async function getPosts() {
           `${post.mediaType || "text"}`
         );
 
-        // Data futura
+        // Tweet con data futura
         if (age < 0) {
           return false;
         }
 
-        // Troppo vecchio
+        // Tweet più vecchio di 60 minuti
         if (age > MAX_AGE_MS) {
           return false;
         }
@@ -333,13 +333,13 @@ async function getPosts() {
 // ============================================================
 
 async function sendToDiscord(post) {
-   author =
+  const author =
     post.author ||
     {};
 
   const authorName =
     author.name ||
-    "Lord Putin";
+    USERNAME;
 
   const username =
     author.screen_name ||
@@ -353,15 +353,8 @@ async function sendToDiscord(post) {
   // VIDEO
   // ==========================================================
   //
-  // Formato che abbiamo verificato nel TEST 2.
-  //
-  // Mandiamo il link FxTwitter come normale messaggio.
-  // Discord genera automaticamente la scheda con:
-  //
-  // - testo del tweet
-  // - autore
-  // - statistiche
-  // - player video
+  // Usa FxTwitter così Discord genera
+  // automaticamente il player video.
   //
   // ==========================================================
 
@@ -475,7 +468,8 @@ async function sendToDiscord(post) {
     },
 
     footer: {
-      text: "Game News • X"
+      text:
+        "Game News • X"
     },
 
     timestamp:
@@ -628,8 +622,8 @@ async function main() {
     try {
       await sendToDiscord(post);
 
-      // Lo aggiungiamo allo state soltanto
-      // se Discord ha accettato il messaggio.
+      // Viene salvato nello state solo
+      // dopo che Discord lo ha accettato.
       state.ids.push(
         post.id
       );
