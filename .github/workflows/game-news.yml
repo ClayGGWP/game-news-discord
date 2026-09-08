@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: anime-news-discord
+  group: game-news-discord
   cancel-in-progress: false
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
         with:
           node-version: 22
 
-      - name: Controlla AniNewsAndFacts
+      - name: Controlla shinobi602
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: node bot.js
@@ -46,5 +46,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add state.json
-          git commit -m "Update Anime News state [skip ci]"
+          git commit -m "Update Game News state [skip ci]"
           git push origin HEAD:main
