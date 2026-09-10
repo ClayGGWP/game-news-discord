@@ -5,7 +5,7 @@ const STATE_FILE = "state.json";
 
 const USERNAME = "shinobi602";
 
-const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 // ============================================================
 // STATE
