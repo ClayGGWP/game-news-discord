@@ -1,0 +1,8 @@
+{
+  "name": "anime-news-discord",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "fxtwitter": "^2.0.0"
+  }
+}
