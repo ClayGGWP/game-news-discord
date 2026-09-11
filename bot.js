@@ -1,4 +1,11 @@
 import fs from "node:fs";
+import { FxTwitterV2 } from "fxtwitter/v2";
+
+const fx = new FxTwitterV2({
+  headers: {
+    "User-Agent": "DiscordNewsBot/1.0"
+  }
+});
 
 const WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
 const STATE_FILE = "state.json";
