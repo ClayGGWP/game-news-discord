@@ -97,213 +97,163 @@ function getFxTwitterUrl(postUrl) {
 
 async function getPosts() {
   try {
-    const url =
-      `https://api.vxtwitter.com/${USERNAME}?with_tweets=true`;
-
-    console.log(`Connessione a: ${url}`);
-
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0"
-      }
-    });
-
-    if (!response.ok) {
-      console.error(
-        `VXTwitter HTTP ${response.status}`
-      );
-
-      console.error(
-        await response.text()
-      );
-
-      return [];
-    }
-
-    const data = await response.json();
-
-    if (!Array.isArray(data.latest_tweets)) {
-      console.error(
-        "VXTwitter non ha restituito latest_tweets."
-      );
-
-      return [];
-    }
-
     console.log(
-      `VXTwitter ha restituito ${data.latest_tweets.length} tweet`
+      `Connessione a FxTwitter v2 per @${USERNAME}...`
     );
 
-    const now = Date.now();
-
-    // ========================================================
-    // CONVERSIONE TWEET
-    // ========================================================
-
-    const posts = data.latest_tweets
-      .map((tweet) => {
-        const tweetId =
-          tweet.tweetID ||
-          tweet.id;
-
-        if (!tweetId) {
-          return null;
+    const page =
+      await fx.getProfileStatuses(
+        USERNAME,
+        {
+          count: 20
         }
+      );
 
-        const createdAt =
-          tweet.date ||
-          null;
+    if (!page) {
+      console.log(
+        "FxTwitter non ha restituito nuovi post."
+      );
 
-        // ====================================================
-        // MEDIA
-        // ====================================================
+      return [];
+    }
 
-        let media = null;
-        let mediaType = null;
+    const results =
+      Array.isArray(page.results)
+        ? page.results
+        : [];
 
-        const extended =
-          Array.isArray(tweet.media_extended)
-            ? tweet.media_extended
-            : [];
+    console.log(
+      `FxTwitter ha restituito ${results.length} post`
+    );
 
-        // ----------------------------------------------------
-        // VIDEO
-        // ----------------------------------------------------
+    const now =
+      Date.now();
 
-        const videoMedia = extended.find(
-          (item) =>
-            item &&
-            item.type === "video"
-        );
-
-        if (videoMedia) {
-          mediaType = "video";
-
-          media =
-            videoMedia.url ||
-            null;
-        }
-
-        // ----------------------------------------------------
-        // IMMAGINE
-        // ----------------------------------------------------
-
-        if (!mediaType) {
-          const imageMedia = extended.find(
-            (item) =>
-              item &&
-              item.type === "image"
-          );
-
-          if (imageMedia) {
-            mediaType = "image";
-
-            media =
-              imageMedia.url ||
-              imageMedia.thumbnail_url ||
-              null;
+    const posts =
+      results
+        .map((tweet) => {
+          if (!tweet || !tweet.id) {
+            return null;
           }
-        }
 
-        // ----------------------------------------------------
-        // FALLBACK mediaURLs
-        // ----------------------------------------------------
+          let media = null;
+          let mediaType = null;
 
-        if (
-          !mediaType &&
-          Array.isArray(tweet.mediaURLs) &&
-          tweet.mediaURLs.length > 0
-        ) {
-          const firstMedia =
-            tweet.mediaURLs[0];
-
-          media = firstMedia;
-
-          const mediaUrl =
-            String(firstMedia).toLowerCase();
+          // ================================================
+          // VIDEO
+          // ================================================
 
           if (
-            mediaUrl.includes(".mp4") ||
-            mediaUrl.includes("video.twimg.com") ||
-            mediaUrl.includes(".m3u8")
+            Array.isArray(tweet.media?.videos) &&
+            tweet.media.videos.length > 0
           ) {
-            mediaType = "video";
-          } else {
-            mediaType = "image";
+            const video =
+              tweet.media.videos[0];
+
+            mediaType =
+              "video";
+
+            media =
+              video.url ||
+              video.transcode_url ||
+              video.thumbnail_url ||
+              null;
           }
-        }
 
-        return {
-          id: String(tweetId),
+          // ================================================
+          // IMMAGINI
+          // ================================================
 
-          text:
-            tweet.text ||
-            "",
+          if (
+            !mediaType &&
+            Array.isArray(tweet.media?.photos) &&
+            tweet.media.photos.length > 0
+          ) {
+            const photo =
+              tweet.media.photos[0];
 
-          url:
-            tweet.tweetURL ||
-            `https://x.com/${USERNAME}/status/${tweetId}`,
+            mediaType =
+              "image";
 
-          created_at:
-            createdAt,
+            media =
+              photo.url ||
+              null;
+          }
 
-          author: {
-            name:
-              tweet.user_name ||
-              USERNAME,
+          return {
+            id:
+              String(tweet.id),
 
-            screen_name:
-              tweet.user_screen_name ||
-              USERNAME,
+            text:
+              tweet.text ||
+              "",
 
-            avatar_url:
-              tweet.user_profile_image_url ||
-              null
-          },
+            url:
+              tweet.url ||
+              `https://x.com/${USERNAME}/status/${tweet.id}`,
 
-          media,
-          mediaType,
+            created_at:
+              tweet.created_at ||
+              null,
 
-          stats: {
-            replies:
-              tweet.replies ?? 0,
-          
-            retweets:
-              tweet.retweets ?? 0,
-          
-            likes:
-              tweet.likes ?? 0,
-          
-            views:
-              tweet.views ??
-              tweet.view_count ??
-              tweet.viewCount ??
-              null
-        }
-        };
-      })
-      .filter(Boolean);
+            author: {
+              name:
+                tweet.author?.name ||
+                USERNAME,
 
-    // ========================================================
+              screen_name:
+                tweet.author?.username ||
+                tweet.author?.screen_name ||
+                USERNAME,
+
+              avatar_url:
+                tweet.author?.avatar_url ||
+                tweet.author?.profile_image_url ||
+                null
+            },
+
+            media,
+            mediaType,
+
+            stats: {
+              replies:
+                tweet.replies ?? 0,
+
+              retweets:
+                tweet.reposts ?? 0,
+
+              likes:
+                tweet.likes ?? 0,
+
+              views:
+                tweet.views ?? null
+            }
+          };
+        })
+        .filter(Boolean);
+
+    // ================================================
     // FILTRO TEMPORALE
-    // ========================================================
+    // ================================================
 
     const recentPosts =
       posts.filter((post) => {
         if (!post.created_at) {
           console.log(
-            `Tweet ${post.id}: data assente, ignorato`
+            `Post ${post.id}: data assente, ignorato`
           );
 
           return false;
         }
 
         const tweetTime =
-          new Date(post.created_at).getTime();
+          new Date(
+            post.created_at
+          ).getTime();
 
         if (!Number.isFinite(tweetTime)) {
           console.log(
-            `Tweet ${post.id}: data non valida (${post.created_at})`
+            `Post ${post.id}: data non valida (${post.created_at})`
           );
 
           return false;
@@ -313,20 +263,20 @@ async function getPosts() {
           now - tweetTime;
 
         const ageMinutes =
-          Math.round(age / 60000);
+          Math.round(
+            age / 60000
+          );
 
         console.log(
-          `Tweet ${post.id}: ${post.created_at} | ` +
+          `Post ${post.id}: ${post.created_at} | ` +
           `età: ${ageMinutes} minuti | ` +
           `${post.mediaType || "text"}`
         );
 
-        // Tweet con data futura
         if (age < 0) {
           return false;
         }
 
-        // Tweet più vecchio di 60 minuti
         if (age > MAX_AGE_MS) {
           return false;
         }
@@ -335,15 +285,15 @@ async function getPosts() {
       });
 
     console.log(
-      `Tweet recenti: ${recentPosts.length}`
+      `Post recenti: ${recentPosts.length}`
     );
 
     return recentPosts;
 
   } catch (err) {
     console.error(
-      "Errore durante la chiamata VXTwitter:",
-      err.message
+      "Errore durante la chiamata FxTwitter:",
+      err
     );
 
     return [];
