@@ -28,6 +28,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Installa dipendenze
+        run: npm install
+
       - name: Controlla shinobi602
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
